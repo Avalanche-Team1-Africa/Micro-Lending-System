@@ -1,7 +1,11 @@
-// Import required modules
 const express = require('express');
 const mongoose = require('mongoose');
-require('dotenv').config();
+const dotenv = require('dotenv');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const userRoutes = require('./micro-lending-backend/routes/userRoutes');
+
+dotenv.config()
 
 // Initialize the app
 const app = express();
@@ -9,13 +13,18 @@ const app = express();
 // Middleware for parsing JSON
 app.use(express.json());
 
-// Load environment variables
-const { PORT, MONGO_URI } = process.env;
+app.use(cors())
 
+app.use('/api/auth/', userRoutes);
+
+// Load environment variables
+const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI
 // Connect to MongoDB
 mongoose.connect(MONGO_URI)
     .then(() => console.log('Connected to MongoDB successfully!'))
     .catch((err) => console.error('MongoDB connection error:', err));
+
 
 // Define a basic route for health check
 app.get('/', (req, res) => {
