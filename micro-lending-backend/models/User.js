@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     walletAddress: { type: String, required: true },
     reputationScore: { type: Number, default: 0 },
-    dateCreated: { type: Date, default: Date.now }
+    dateCreated: { type: Date, default: Date.now },
+    role: { type: String, enum: ['borrower', 'lender', 'admin'], required: true },
 });
 
 const User = mongoose.model('User', userSchema);
