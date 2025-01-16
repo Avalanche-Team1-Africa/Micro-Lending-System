@@ -14,6 +14,6 @@ contract LenderFunding is LoanRequest {
 
         loan.isFunded = true;
         loan.lender = msg.sender;
-        loan.status = LoanStatus.approved;
+        loan.status = LoanStatus.Approved;
     }
 }

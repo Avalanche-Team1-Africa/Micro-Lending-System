@@ -9,7 +9,7 @@ contract LoanRepayment is LenderFunding {
 
         require(loan.isFunded, "Loan is not funded yet");
         require(msg.sender == loan.borrower, "Only borrower can repay");
-        require(msg.value == loan.amount + (loan.amount * loan.interestRate / 100), "Incorrect repayment amount")
+        require(msg.value == loan.amount + (loan.amount * loan.interestRate / 100), "Incorrect repayment amount");
 
         payable(loan.lender).transfer(msg.value);
 

@@ -15,22 +15,22 @@ contract LoanRequest {
         LoanStatus status;
     }
 
-    mapping(uint256 => Loan) = public loans;
+    mapping(uint256 => Loan) public loans;
     uint256 public loanCount;
 
     function createLoanRequest(uint256 amount, uint256 interestRate, uint256 repaymentDeadline) public {
         loanCount++;
 
         loans[loanCount] = Loan({
-            amount: _amount;
-            interestRate: _interestRate;
-            repaymentDeadline: _repaymentDeadline;
-            borrower: msg.sender;
-            lender: address(0);
-            isFunded: false;
+            amount: amount,
+            interestRate: interestRate,
+            repaymentDeadline: repaymentDeadline,
+            borrower: msg.sender,
+            lender: address(0),
+            isFunded: false,
             isRepaid: false,
-            status: LoanStatus.Pending;
-        })
+            status: LoanStatus.Pending
+        });
     }
 
     function getLoanStatus(uint256 loanId) public view returns (string memory) {
@@ -38,7 +38,7 @@ contract LoanRequest {
 
         if (loan.isRepaid) return "Repaid";
         if (loan.repaymentDeadline < block.timestamp && !loan.isRepaid) return "Defaulted";
-        if (loan.isFunded) return "Approved"
+        if (loan.isFunded) return "Approved";
         return "Pending";
     }
 }
