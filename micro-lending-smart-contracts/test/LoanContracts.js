@@ -1,13 +1,13 @@
-import { expect } from "chai";
-const ethers = "hardhat";
+const { expect } = require("chai");
+const { ethers } = require("hardhat");
 
 describe("Loan Contracts", function () {
   let LoanRequest, loanRequest;
   let owner, borrower, lender, otherAccount;
 
   beforeEach(async function () {
-    // Deploy the PenaltyRewardLogic contract (inherits all logic)
-    LoanRequest = await ethers.getContractFactory("PenaltyRewardLogic");
+    // Deploy the PenaltyReward contract (inherits all logic)
+    LoanRequest = await ethers.getContractFactory("PenaltyReward");
     [owner, borrower, lender, otherAccount] = await ethers.getSigners();
     loanRequest = await LoanRequest.deploy();
     await loanRequest.deployed();
