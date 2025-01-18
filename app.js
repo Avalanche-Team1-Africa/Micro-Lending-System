@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const userRoutes = require('./micro-lending-backend/routes/userRoutes');
+const loanRoutes = require('./micro-lending-backend/routes/loanRoutes');
 
 dotenv.config()
 
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use(cors())
 
 app.use('/api/auth/', userRoutes);
+app.use('/api/loans/', loanRoutes)
 
 // Load environment variables
 const PORT = process.env.PORT || 3000;
