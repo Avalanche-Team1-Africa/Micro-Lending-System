@@ -21,12 +21,6 @@ async function main() {
     const loanRepayment = await LoanRepayment.deploy();
     await loanRepayment.deployed();
     console.log("LoanRepayment deployed to:", loanRepayment.address);
-
-    // Deploy PenaltyReward contract
-    const PenaltyReward = await ethers.getContractFactory("PenaltyReward");
-    const penaltyReward = await PenaltyReward.deploy();
-    await penaltyReward.deployed();
-    console.log("PenaltyReward deployed to:", penaltyReward.address);
 }
 
 main().catch((error) => {
