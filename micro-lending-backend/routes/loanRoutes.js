@@ -1,12 +1,14 @@
 const express = require('express');
-const { createLoan, fundLoan, repayLoan, penalizeLoan } = require('../controllers/loanController');
-const { verifyToken } = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const loanController = require('../controllers/loanController');
 
-router.post('/create-loan', verifyToken, createLoan);
-router.post('/fund-loan/:loanId', verifyToken, fundLoan);
-router.post('/repay-loan/:loanId', verifyToken, repayLoan);
-router.post('/penalize-loan/:loanId', verifyToken, penalizeLoan);
+// Loan management routes
+router.post('/loans', loanController.createLoan);
+router.post('/loans/:loanId/fund', loanController.fundLoan);
+router.post('/loans/:loanId/repay', loanController.repayLoan);
+router.post('/loans/:loanId/penalize', loanController.penalizeLoan);
+router.get('/loans/user/:userAddress', loanController.fetchLoansByUser);
+router.get('/loans/lender/:lenderAddress', loanController.fetchLenderLoans);
+router.get('/loans/requests', loanController.fetchLoanRequests);
 
 module.exports = router;

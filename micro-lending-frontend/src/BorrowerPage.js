@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { BrowserProvider , Contract, parseUnits } from "ethers";
+
+
+import { loanRequestContract } from "./config"; 
 
 const BorrowerPage = () => {
   const [borrowerAddress, setBorrowerAddress] = useState("");
@@ -19,7 +23,7 @@ const BorrowerPage = () => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        const decodedToken = jwtDecode(token); 
+        const decodedToken = jwtDecode(token);
         setUserId(decodedToken.userId);
       } catch (err) {
         console.error("Error decoding token:", err);
@@ -32,34 +36,102 @@ const BorrowerPage = () => {
     setError("");
     setSuccess("");
     setLoading(true);
-
+  
     if (!borrowerAddress || !lenderAddress || !loanAmount || !interestRate || !repaymentTerms) {
       setError("All fields are required.");
       setLoading(false);
       return;
     }
-
-    const loanRequest = {
-      userId,
-      borrowerAddress,
-      lenderAddress,
-      loanAmount: parseFloat(loanAmount),
-      interestRate: parseFloat(interestRate),
-      repaymentTerms,
-    };
-
+  
+    // Check if addresses are valid (0x format, 42 characters)
+    if (!borrowerAddress.startsWith("0x") || borrowerAddress.length !== 42) {
+      setError("Invalid borrower address. Please enter a valid 0x address.");
+      setLoading(false);
+      return;
+    }
+  
+    if (!lenderAddress.startsWith("0x") || lenderAddress.length !== 42) {
+      setError("Invalid lender address. Please enter a valid 0x address.");
+      setLoading(false);
+      return;
+    }
+    if (borrowerAddress.includes(".eth") || lenderAddress.includes(".eth")) {
+      setError("ENS names are not supported on this network. Please provide a valid 0x address.");
+      setLoading(false);
+      return;
+    }
+    // Check if MetaMask is installed
+    if (!window.ethereum) {
+      setError("MetaMask is required to submit loan requests.");
+      setLoading(false);
+      return;
+    }
+  
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/loan/create-request",
-        loanRequest
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+  
+      // Initialize the provider without modifying _network
+      const provider = new BrowserProvider(window.ethereum);
+      const network = await provider.getNetwork();
+      console.log("Connected Network:", network);
+      console.log("Detected Chain ID:", Number(network.chainId));
+  
+      if (Number(network.chainId) !== 43113) {  
+        setError("Please connect to the Avalanche Fuji C-Chain network.");
+        setLoading(false);
+        return;
+      }
+  
+      const signer = await provider.getSigner();
+      const walletAddress = await signer.getAddress();  // ✅ Use getAddress() instead of resolveName()
+      
+      console.log("Signer Address:", walletAddress);
+  
+      const contract = new Contract(
+        loanRequestContract.address,
+        loanRequestContract.abi,
+        signer
       );
+  
+      // Convert loan amount to Wei
+      const loanAmountWei = parseUnits(loanAmount, "ether");
+  
+      // Fetch gas price safely
+      const gasPrice = await provider.send("eth_gasPrice", []).catch(() => parseUnits("25", "gwei"));
+      const gasLimit = 500000;
+  
+      // Send transaction
+      const tx = await contract.createLoanRequest(
+        loanAmountWei,
+        interestRate,
+        parseInt(repaymentTerms),
+        { gasLimit, gasPrice }
+      );
+  
+      await tx.wait();
+  
+      const loanCount = await contract.loanCount();  
+  
+      const loanRequest = {
+        userId,
+        borrowerAddress,
+        lenderAddress,
+        loanAmount: parseFloat(loanAmount),
+        interestRate: parseFloat(interestRate),
+        repaymentTerms,
+        loanId: loanCount.toString(),
+      };
+  
+      const response = await axios.post("http://localhost:3000/api/loans", loanRequest);
+  
       setSuccess(response.data.message || "Loan request submitted successfully!");
       setBorrowerAddress("");
       setLenderAddress("");
       setLoanAmount("");
       setInterestRate("");
       setRepaymentTerms("");
-      setTimeout(() => navigate("/BorrowerDashboardPage"), 2000);
+  
+      setTimeout(() => navigate("/BorrowerDashboardPage"), 900000);
     } catch (error) {
       console.error("Error submitting loan request:", error);
       setError("Failed to submit loan request. Please try again.");
@@ -67,6 +139,8 @@ const BorrowerPage = () => {
       setLoading(false);
     }
   };
+  
+  
 
   return (
     <div style={styles.container}>
@@ -91,6 +165,7 @@ const BorrowerPage = () => {
   );
 };
 
+// Styling
 const styles = {
   container: {
     fontFamily: "Arial, sans-serif",
@@ -151,3 +226,4 @@ const styles = {
 };
 
 export default BorrowerPage;
+

@@ -18,6 +18,10 @@ contract LoanRequest {
     mapping(uint256 => Loan) public loans;
     uint256 public loanCount;
 
+    // Declare the event
+    event LoanCreated(uint256 loanId, address borrower, uint256 amount, uint256 interestRate, uint256 repaymentDeadline);
+
+    // Function to create a new loan request
     function createLoanRequest(uint256 amount, uint256 interestRate, uint256 repaymentDeadline) public {
         loanCount++;
 
@@ -31,8 +35,12 @@ contract LoanRequest {
             isRepaid: false,
             status: LoanStatus.Pending
         });
+
+        // Emit the LoanCreated event with loan details
+        emit LoanCreated(loanCount, msg.sender, amount, interestRate, repaymentDeadline);
     }
 
+    // Function to get the loan status
     function getLoanStatus(uint256 loanId) public view returns (string memory) {
         Loan memory loan = loans[loanId];
 
@@ -42,3 +50,4 @@ contract LoanRequest {
         return "Pending";
     }
 }
+

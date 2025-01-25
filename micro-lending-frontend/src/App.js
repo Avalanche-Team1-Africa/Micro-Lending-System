@@ -3,28 +3,39 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import LoginPage from './LoginPage';
 import SignupPage from './SignupPage';
-import DashboardPage from './DashboardPage';
-import NotFoundPage from './NotFoundPage'
 
+import BorrowerNotificationPage from './BorrowerNotificationPage';
+import LenderNotificationPage from './LenderNotificationPage';
+import LenderDashboardPage from './LenderDashboardPage';
+import BorrowerDashboardPage from './BorrowerDashboardPage';
+import BorrowerPage from './BorrowerPage';
+import LenderPage from './LenderPage';
+import LoanRepaymentPage from './LoanRepaymentPage';
+import ProfilePage from './ProfilePage';
+import NotFoundPage from './NotFoundPage';
 const App = () => {
   return (
     <Router>
       <Routes>
         {/* Landing Page */}
         <Route path="/" element={<LandingPage />} />
-
+<Route path="/BorrowerPage" element={<BorrowerPage/>} />
+<Route path="LenderPage" element={<LenderPage />} />
          {/* Authentication Pages */}
          <Route path="/LoginPage" element={<LoginPage />} />
         <Route path="/SignupPage" element={<SignupPage />} />
-
+        <Route path="/ProfilePage" element={<ProfilePage />} />
         {/* User Dashboard */}
-        <Route path="/DashboardPage" element={<DashboardPage />} />
+        <Route path="/BorrowerNotificationPage" element={<BorrowerNotificationPage />} />
+        <Route path="/LenderNotificationPage" element={<LenderNotificationPage/>} />
+        
+        
 
-        {/* 404 Not Found Page */}
-        <Route path="*" element={<NotFoundPage />} />
+<Route path="/LenderDashboardPage" element={<LenderDashboardPage />} />
+<Route path="/BorrowerDashboardPage" element={<BorrowerDashboardPage />} />
+<Route path="/LoanRepaymentPage" element={<LoanRepaymentPage />} />
 
-
-
+<Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );

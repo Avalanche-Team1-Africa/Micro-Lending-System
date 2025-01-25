@@ -4,8 +4,6 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
-const LenderRoutes = require('./routes/LenderRoutes');
-const borrowerRoutes = require('./routes/borrowerRoutes');
 const loanRoutes = require('./routes/loanRoutes');
 dotenv.config()
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -17,6 +15,8 @@ const app = express();
 
 // Middleware for parsing JSON
 app.use(express.json());
+app.use(bodyParser.json());  // Backup parser
+app.use(bodyParser.urlencoded({ extended: true })); 
 app.use(cors())
 
 // Load environment variables
@@ -30,9 +30,7 @@ mongoose.connect(uri)
     .catch((err) => console.error('MongoDB connection error:', err));
 
 app.use('/api/auth/', userRoutes);
-app.use('/api/auth/', loanRoutes);
-app.use('/api/loan', LenderRoutes);
-app.use('/api/loan', borrowerRoutes);
+app.use('/api/loans/', loanRoutes);
 
 
 

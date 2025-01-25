@@ -5,29 +5,39 @@ import axios from "axios";
 const BorrowerDashboardPage = () => {
   const [loans, setLoans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const userId = "yourUserId"; // Assume the user's ID is available in user context or state
+  const userId = localStorage.getItem("userId"); // Assuming the user's ID is available in localStorage
 
   useEffect(() => {
     const fetchLoans = async () => {
+      if (!userId) {
+        setError("User ID not found.");
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         const response = await axios.get(`/api/borrower/my-loans/${userId}`);
         setLoans(response.data);
       } catch (error) {
         console.error("Error fetching loans:", error);
+        setError("An error occurred while fetching your loans.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (userId) {
-      fetchLoans();
-    }
+    fetchLoans();
   }, [userId]);
 
   return (
     <div style={styles.container}>
       <h2 style={styles.header}>My Dashboard</h2>
+
+      {/* Display error if any */}
+      {error && <p style={styles.errorMessage}>{error}</p>}
+
       <section style={styles.section}>
         <h3 style={styles.loanHeader}>My Loans</h3>
         {isLoading ? (
@@ -35,9 +45,9 @@ const BorrowerDashboardPage = () => {
         ) : loans.length > 0 ? (
           <ul style={styles.loanList}>
             {loans.map((loan) => (
-              <li key={loan._id} style={styles.loanItem}>
+              <li key={loan.loanId} style={styles.loanItem}>
                 <p style={styles.loanText}><strong>Lender Address:</strong> {loan.lenderAddress}</p>
-                <p style={styles.loanText}><strong>Loan Amount:</strong> {loan.loanAmount}</p>
+                <p style={styles.loanText}><strong>Loan Amount:</strong> {loan.amount} AVAX</p>
                 <p style={styles.loanText}><strong>Interest Rate:</strong> {loan.interestRate}%</p>
                 <p style={styles.loanText}><strong>Repayment Terms:</strong> {loan.repaymentTerms}</p>
                 <p style={styles.loanText}><strong>Status:</strong> {loan.status}</p>
@@ -48,6 +58,7 @@ const BorrowerDashboardPage = () => {
           <p style={styles.noLoansMessage}>No loans found.</p>
         )}
       </section>
+
       <Link to="/BorrowerPage" style={styles.newLoanLink}>
         Submit a New Loan Request
       </Link>
@@ -69,6 +80,12 @@ const styles = {
     fontSize: "2rem",
     color: "#343a40",
     textAlign: "center",
+  },
+  errorMessage: {
+    color: "red",
+    fontSize: "16px",
+    textAlign: "center",
+    marginBottom: "20px",
   },
   section: {
     width: "80%",
