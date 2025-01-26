@@ -2,10 +2,28 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { BrowserProvider , Contract, parseUnits } from "ethers";
+import { ethers } from "ethers";
+import { loanRequestContract } from "./config";
 
+// ENS resolver function (you can move this to a separate utils file if preferred)
+async function resolveENS(nameOrAddress, provider) {
+  const network = await provider.getNetwork();
 
-import { loanRequestContract } from "./config"; 
+  // ENS is supported on Ethereum networks, not on Avalanche or other chains
+  if (network.chainId === 1 || network.chainId === 3 || network.chainId === 4 || network.chainId === 5 || network.chainId === 42) {
+    try {
+      const resolvedAddress = await provider.resolveName(nameOrAddress);
+      return resolvedAddress;
+    } catch (error) {
+      console.error("Error resolving ENS name:", error);
+      return nameOrAddress; // Return the original name if resolution fails
+    }
+  } else {
+    // No ENS on non-Ethereum networks like Avalanche
+    console.warn("ENS resolution not supported on this network.");
+    return nameOrAddress; // Return the input as-is
+  }
+}
 
 const BorrowerPage = () => {
   const [borrowerAddress, setBorrowerAddress] = useState("");
@@ -36,70 +54,82 @@ const BorrowerPage = () => {
     setError("");
     setSuccess("");
     setLoading(true);
-  
+
     if (!borrowerAddress || !lenderAddress || !loanAmount || !interestRate || !repaymentTerms) {
       setError("All fields are required.");
       setLoading(false);
       return;
     }
-  
+
     // Check if addresses are valid (0x format, 42 characters)
     if (!borrowerAddress.startsWith("0x") || borrowerAddress.length !== 42) {
       setError("Invalid borrower address. Please enter a valid 0x address.");
       setLoading(false);
       return;
     }
-  
+
     if (!lenderAddress.startsWith("0x") || lenderAddress.length !== 42) {
       setError("Invalid lender address. Please enter a valid 0x address.");
       setLoading(false);
       return;
     }
+
+    // Check for ENS addresses and resolve them
     if (borrowerAddress.includes(".eth") || lenderAddress.includes(".eth")) {
-      setError("ENS names are not supported on this network. Please provide a valid 0x address.");
-      setLoading(false);
-      return;
+      // If ENS names are provided, resolve them to Ethereum addresses
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const resolvedBorrowerAddress = await resolveENS(borrowerAddress, provider);
+      const resolvedLenderAddress = await resolveENS(lenderAddress, provider);
+
+      if (resolvedBorrowerAddress !== borrowerAddress) {
+        setBorrowerAddress(resolvedBorrowerAddress);
+      }
+
+      if (resolvedLenderAddress !== lenderAddress) {
+        setLenderAddress(resolvedLenderAddress);
+      }
     }
+
     // Check if MetaMask is installed
     if (!window.ethereum) {
       setError("MetaMask is required to submit loan requests.");
       setLoading(false);
       return;
     }
-  
+
     try {
       await window.ethereum.request({ method: "eth_requestAccounts" });
-  
+
       // Initialize the provider without modifying _network
-      const provider = new BrowserProvider(window.ethereum);
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
       const network = await provider.getNetwork();
       console.log("Connected Network:", network);
       console.log("Detected Chain ID:", Number(network.chainId));
-  
-      if (Number(network.chainId) !== 43113) {  
+
+      if (Number(network.chainId) !== 43113) {
         setError("Please connect to the Avalanche Fuji C-Chain network.");
         setLoading(false);
         return;
       }
-  
+
       const signer = await provider.getSigner();
-      const walletAddress = await signer.getAddress();  // ✅ Use getAddress() instead of resolveName()
-      
+      const walletAddress = await signer.getAddress(); // ✅ Use getAddress() instead of resolveName()
+
       console.log("Signer Address:", walletAddress);
-  
-      const contract = new Contract(
+
+      const contract = new ethers.Contract(
         loanRequestContract.address,
         loanRequestContract.abi,
         signer
       );
-  
+
       // Convert loan amount to Wei
-      const loanAmountWei = parseUnits(loanAmount, "ether");
-  
+      const loanAmountWei = ethers.utils.parseUnits(loanAmount, "ether");
+
       // Fetch gas price safely
-      const gasPrice = await provider.send("eth_gasPrice", []).catch(() => parseUnits("25", "gwei"));
+      const gasPrice = await provider.send("eth_gasPrice", []).catch(() => ethers.utils.parseUnits("25", "gwei"));
       const gasLimit = 500000;
-  
+
       // Send transaction
       const tx = await contract.createLoanRequest(
         loanAmountWei,
@@ -107,11 +137,11 @@ const BorrowerPage = () => {
         parseInt(repaymentTerms),
         { gasLimit, gasPrice }
       );
-  
+
       await tx.wait();
-  
-      const loanCount = await contract.loanCount();  
-  
+
+      const loanCount = await contract.loanCount();
+
       const loanRequest = {
         userId,
         borrowerAddress,
@@ -121,16 +151,16 @@ const BorrowerPage = () => {
         repaymentTerms,
         loanId: loanCount.toString(),
       };
-  
+
       const response = await axios.post("http://localhost:3000/api/loans", loanRequest);
-  
+
       setSuccess(response.data.message || "Loan request submitted successfully!");
       setBorrowerAddress("");
       setLenderAddress("");
       setLoanAmount("");
       setInterestRate("");
       setRepaymentTerms("");
-  
+
       setTimeout(() => navigate("/BorrowerDashboardPage"), 900000);
     } catch (error) {
       console.error("Error submitting loan request:", error);
@@ -139,8 +169,6 @@ const BorrowerPage = () => {
       setLoading(false);
     }
   };
-  
-  
 
   return (
     <div style={styles.container}>
@@ -165,7 +193,7 @@ const BorrowerPage = () => {
   );
 };
 
-// Styling
+// Styling (same as before)
 const styles = {
   container: {
     fontFamily: "Arial, sans-serif",
@@ -226,4 +254,3 @@ const styles = {
 };
 
 export default BorrowerPage;
-

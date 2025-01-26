@@ -16,7 +16,7 @@ const LenderDashboardPage = () => {
         return;
       }
       try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
+        const provider = new ethers.providers.JsonRpcProvider(window.ethereum);
         const signer = await provider.getSigner();
         const address = await signer.getAddress();
         setLenderAddress(address);

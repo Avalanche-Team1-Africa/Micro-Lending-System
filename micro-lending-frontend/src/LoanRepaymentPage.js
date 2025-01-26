@@ -38,12 +38,12 @@ const LoanRepaymentPage = () => {
     }
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.providers.JsonRpcProvider(window.ethereum);
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(contractAddress, LoanRepayment, signer);
 
       const tx = await contract.payLoan(loanId, {
-        value: ethers.parseEther(paymentAmount),
+        value: ethers.utils.parseEther(paymentAmount),
       });
 
       await tx.wait();

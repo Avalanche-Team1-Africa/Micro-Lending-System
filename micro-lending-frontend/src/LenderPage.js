@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { loanRequestContract, loanRepaymentContract } from "./config";
-import { BrowserProvider, Contract, parseEther } from "ethers";
+import { ethers } from "ethers";
 
 const LenderPage = () => {
   const [lenderAddress, setLenderAddress] = useState("");
@@ -26,14 +26,14 @@ const LenderPage = () => {
     }
 
     try {
-      const provider = new BrowserProvider(window.ethereum);
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = await provider.getSigner();
 
-      const contract = new Contract(loanRequestContract.address, loanRequestContract.abi, signer);
+      const contract = new ethers.Contract(loanRequestContract.address, loanRequestContract.abi, signer);
 
       // Send transaction to blockchain
       const tx = await contract.createLoanRequest(
-        parseEther(amountLent.toString()), // Convert to Wei
+        ethers.utils.parseEther(amountLent.toString()), // Convert to Wei
         interestRate,
         repaymentTerms
       );
@@ -66,13 +66,13 @@ const LenderPage = () => {
     }
 
     try {
-      const provider = new BrowserProvider(window.ethereum);
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = await provider.getSigner();
 
-      const contract = new Contract(loanRepaymentContract.address, loanRepaymentContract.abi, signer);
+      const contract = new ethers.Contract(loanRepaymentContract.address, loanRepaymentContract.abi, signer);
 
       const tx = await contract.fundLoan(loanId, {
-        value: parseEther(amountLent.toString()), // Send amount as value
+        value: ethers.utils.parseEther(amountLent.toString()), // Send amount as value
       });
 
       await tx.wait();
