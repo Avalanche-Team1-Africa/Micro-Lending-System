@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { ethers } from "ethers";
-import LoanRepayment from "./LoanRepayment.json"; // ✅ Correct import
+import LoanRepayment from "./LoanRepayment.json"; 
 
 const LoanRepaymentPage = () => {
   const [loans, setLoans] = useState([]);
@@ -12,7 +12,7 @@ const LoanRepaymentPage = () => {
 
   const userId = localStorage.getItem("userId");
 
-  const contractAddress = "0xD76e1EbC8f2D2Affc0a9B9567034F489a9Aa6940"; // Replace with your contract address
+  const contractAddress = "0xD76e1EbC8f2D2Affc0a9B9567034F489a9Aa6940";
 
   useEffect(() => {
     const fetchLoans = async () => {

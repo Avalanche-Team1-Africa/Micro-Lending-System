@@ -9,7 +9,7 @@ export const lenderFundingContract = {
   };
 
 export const loanRequestContract = {
-  address: " 0x8110Ae08974B018A8091C6fbF8de02e0618FDbf5",
+  address: "0x8110Ae08974B018A8091C6fbF8de02e0618FDbf5",
   abi: loanRequest.abi,
 };
 
