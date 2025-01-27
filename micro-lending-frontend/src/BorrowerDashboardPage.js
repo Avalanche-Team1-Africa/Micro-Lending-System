@@ -7,18 +7,18 @@ const BorrowerDashboardPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const userId = localStorage.getItem("userId"); // Assuming the user's ID is available in localStorage
+  const walletAddress = localStorage.getItem("walletAddress"); // Assuming the user's ID is available in localStorage
 
   useEffect(() => {
-    const fetchLoans = async () => {
-      if (!userId) {
-        setError("User ID not found.");
+    const fetchLoansByBorrower = async () => {
+      if (!walletAddress) {
+        setError("");
         setIsLoading(false);
         return;
       }
       
       try {
-        const response = await axios.get(`/api/borrower/my-loans/${userId}`);
+        const response = await axios.get(`/api/borrower/fetchLoansByBorrower/${walletAddress}`);
         setLoans(response.data);
       } catch (error) {
         console.error("Error fetching loans:", error);
@@ -28,8 +28,8 @@ const BorrowerDashboardPage = () => {
       }
     };
 
-    fetchLoans();
-  }, [userId]);
+    fetchLoansByBorrower();
+  }, [walletAddress]);
 
   return (
     <div style={styles.container}>
@@ -45,11 +45,12 @@ const BorrowerDashboardPage = () => {
         ) : loans.length > 0 ? (
           <ul style={styles.loanList}>
             {loans.map((loan) => (
-              <li key={loan.loanId} style={styles.loanItem}>
-                <p style={styles.loanText}><strong>Lender Address:</strong> {loan.lenderAddress}</p>
-                <p style={styles.loanText}><strong>Loan Amount:</strong> {loan.amount} AVAX</p>
-                <p style={styles.loanText}><strong>Interest Rate:</strong> {loan.interestRate}%</p>
-                <p style={styles.loanText}><strong>Repayment Terms:</strong> {loan.repaymentTerms}</p>
+              <li key={loan._id} style={styles.loanId}>
+                <p style={styles.loanText}><strong>Lender Address:</strong> {loan.lender}</p>
+                <p style={styles.loanText}><strong>Loan Amount:</strong> {loan.amount} </p>
+                <p style={styles.loanText}><strong>Lender Address:</strong> {loan.lender}</p>
+                <p style={styles.loanText}><strong>Interest Rate:</strong> {loan.interestRate}</p>
+                <p style={styles.loanText}><strong>Repayment Deadline:</strong> {new Date(loan.repaymentDeadline).toLocaleString()}</p> 
                 <p style={styles.loanText}><strong>Status:</strong> {loan.status}</p>
               </li>
             ))}

@@ -7,7 +7,7 @@ const LoanRepaymentPage = () => {
   const [loans, setLoans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedLoan, setSelectedLoan] = useState(null);
-  const [paymentAmount, setPaymentAmount] = useState("");
+  const [amount, setamount] = useState("");
   const [repaymentStatus, setRepaymentStatus] = useState("");
 
   const userId = localStorage.getItem("userId");
@@ -32,7 +32,7 @@ const LoanRepaymentPage = () => {
   }, [userId]);
 
   const handleRepayment = async (loanId) => {
-    if (!paymentAmount || isNaN(paymentAmount)) {
+    if (!amount || isNaN(amount)) {
       setRepaymentStatus("Please enter a valid amount.");
       return;
     }
@@ -43,13 +43,13 @@ const LoanRepaymentPage = () => {
       const contract = new ethers.Contract(contractAddress, LoanRepayment, signer);
 
       const tx = await contract.payLoan(loanId, {
-        value: ethers.utils.parseEther(paymentAmount),
+        value: ethers.utils.parseEther(amount),
       });
 
       await tx.wait();
 
       setRepaymentStatus("Repayment successful!");
-      setPaymentAmount(""); 
+      setamount(""); 
     } catch (error) {
       console.error("Error making repayment:", error);
       setRepaymentStatus("Error making repayment. Please try again.");
@@ -85,8 +85,8 @@ const LoanRepaymentPage = () => {
                 <label>Amount to repay (in AVAX):</label>
                 <input
                   type="text"
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  value={amount}
+                  onChange={(e) => setamount(e.target.value)}
                   style={styles.input}
                 />
               </div>

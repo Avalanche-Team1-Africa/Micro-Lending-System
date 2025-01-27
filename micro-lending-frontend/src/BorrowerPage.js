@@ -10,27 +10,28 @@ async function resolveENS(nameOrAddress, provider) {
   const network = await provider.getNetwork();
 
   // ENS is supported on Ethereum networks, not on Avalanche or other chains
-  if (network.chainId === 1 || network.chainId === 3 || network.chainId === 4 || network.chainId === 5 || network.chainId === 42) {
+  if (
+    [1, 3, 4, 5, 42].includes(network.chainId) // Ethereum networks
+  ) {
     try {
       const resolvedAddress = await provider.resolveName(nameOrAddress);
-      return resolvedAddress;
+      return resolvedAddress || nameOrAddress;
     } catch (error) {
       console.error("Error resolving ENS name:", error);
       return nameOrAddress; // Return the original name if resolution fails
     }
   } else {
-    // No ENS on non-Ethereum networks like Avalanche
     console.warn("ENS resolution not supported on this network.");
     return nameOrAddress; // Return the input as-is
   }
 }
 
 const BorrowerPage = () => {
-  const [borrowerAddress, setBorrowerAddress] = useState("");
-  const [lenderAddress, setLenderAddress] = useState("");
-  const [loanAmount, setLoanAmount] = useState("");
+  const [borrower, setBorrower] = useState("");
+  const [lender, setLender] = useState("");
+  const [amount, setamount] = useState("");
   const [interestRate, setInterestRate] = useState("");
-  const [repaymentTerms, setRepaymentTerms] = useState("");
+  const [repaymentDeadline, setrepaymentDeadline] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
@@ -55,42 +56,40 @@ const BorrowerPage = () => {
     setSuccess("");
     setLoading(true);
 
-    if (!borrowerAddress || !lenderAddress || !loanAmount || !interestRate || !repaymentTerms) {
+    if (!borrower || !lender || !amount || !interestRate || !repaymentDeadline) {
       setError("All fields are required.");
       setLoading(false);
       return;
     }
 
     // Check if addresses are valid (0x format, 42 characters)
-    if (!borrowerAddress.startsWith("0x") || borrowerAddress.length !== 42) {
+    if (!borrower.startsWith("0x") || borrower.length !== 42) {
       setError("Invalid borrower address. Please enter a valid 0x address.");
       setLoading(false);
       return;
     }
 
-    if (!lenderAddress.startsWith("0x") || lenderAddress.length !== 42) {
+    if (!lender.startsWith("0x") || lender.length !== 42) {
       setError("Invalid lender address. Please enter a valid 0x address.");
       setLoading(false);
       return;
     }
 
     // Check for ENS addresses and resolve them
-    if (borrowerAddress.includes(".eth") || lenderAddress.includes(".eth")) {
-      // If ENS names are provided, resolve them to Ethereum addresses
+    if (borrower.includes(".eth") || lender.includes(".eth")) {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const resolvedBorrowerAddress = await resolveENS(borrowerAddress, provider);
-      const resolvedLenderAddress = await resolveENS(lenderAddress, provider);
+      const resolvedBorrowerAddress = await resolveENS(borrower, provider);
+      const resolvedLenderAddress = await resolveENS(lender, provider);
 
-      if (resolvedBorrowerAddress !== borrowerAddress) {
-        setBorrowerAddress(resolvedBorrowerAddress);
+      if (resolvedBorrowerAddress && resolvedBorrowerAddress !== borrower) {
+        setBorrower(resolvedBorrowerAddress);
       }
 
-      if (resolvedLenderAddress !== lenderAddress) {
-        setLenderAddress(resolvedLenderAddress);
+      if (resolvedLenderAddress && resolvedLenderAddress !== lender) {
+        setLender(resolvedLenderAddress);
       }
     }
 
-    // Check if MetaMask is installed
     if (!window.ethereum) {
       setError("MetaMask is required to submit loan requests.");
       setLoading(false);
@@ -100,7 +99,6 @@ const BorrowerPage = () => {
     try {
       await window.ethereum.request({ method: "eth_requestAccounts" });
 
-      // Initialize the provider without modifying _network
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const network = await provider.getNetwork();
       console.log("Connected Network:", network);
@@ -113,8 +111,7 @@ const BorrowerPage = () => {
       }
 
       const signer = await provider.getSigner();
-      const walletAddress = await signer.getAddress(); // ✅ Use getAddress() instead of resolveName()
-
+      const walletAddress = await signer.getAddress();
       console.log("Signer Address:", walletAddress);
 
       const contract = new ethers.Contract(
@@ -123,49 +120,85 @@ const BorrowerPage = () => {
         signer
       );
 
-      // Convert loan amount to Wei
-      const loanAmountWei = ethers.utils.parseUnits(loanAmount, "ether");
+      const loanAmountWei = ethers.utils.parseUnits(amount, "ether");
 
-      // Fetch gas price safely
-      const gasPrice = await provider.send("eth_gasPrice", []).catch(() => ethers.utils.parseUnits("25", "gwei"));
-      const gasLimit = 500000;
+      let estimatedGas;
+      try {
+        estimatedGas = await contract.estimateGas.createLoanRequest(
+          loanAmountWei,
+          interestRate,
+          parseInt(repaymentDeadline)
+        );
+      } catch (error) {
+        console.error("Gas estimation failed, using fallback value.", error);
+        estimatedGas = ethers.utils.parseUnits("300000", "wei"); // Adjust fallback
+      }
 
-      // Send transaction
-      const tx = await contract.createLoanRequest(
-        loanAmountWei,
-        interestRate,
-        parseInt(repaymentTerms),
-        { gasLimit, gasPrice }
-      );
+      const feeData = await provider.getFeeData();
+      console.log("Base Fee:", feeData.gasPrice?.toString());
+      console.log("Max Fee Per Gas:", feeData.maxFeePerGas?.toString());
+      console.log("Max Priority Fee Per Gas:", feeData.maxPriorityFeePerGas?.toString());
 
-      await tx.wait();
+      try {
+        const tx = await contract.createLoanRequest(
+          loanAmountWei,
+          interestRate,
+          parseInt(repaymentDeadline),
+          {
+            gasLimit: estimatedGas.mul(1),
+            maxFeePerGas: feeData.maxFeePerGas, 
+            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas.div(2),
+          }
+        );
 
-      const loanCount = await contract.loanCount();
+        const txReceipt = await tx.wait();
+        console.log("Transaction Receipt:", txReceipt);
 
-      const loanRequest = {
-        userId,
-        borrowerAddress,
-        lenderAddress,
-        loanAmount: parseFloat(loanAmount),
-        interestRate: parseFloat(interestRate),
-        repaymentTerms,
-        loanId: loanCount.toString(),
-      };
+        const loanCreatedEvent = txReceipt.events?.find(
+          (e) => e.event === "LoanCreated"
+        );
+        console.log("Transaction Events:", txReceipt.events);
 
-      const response = await axios.post("http://localhost:3000/api/loans", loanRequest);
+        if (!loanCreatedEvent) {
+          console.error("LoanCreated event not found. Check smart contract.");
+          throw new Error("LoanCreated event not emitted.");
+        }
 
-      setSuccess(response.data.message || "Loan request submitted successfully!");
-      setBorrowerAddress("");
-      setLenderAddress("");
-      setLoanAmount("");
-      setInterestRate("");
-      setRepaymentTerms("");
+        const loanId = loanCreatedEvent.args.loanId.toString();
+        console.log("Extracted loan ID:", loanId);
 
-      setTimeout(() => navigate("/BorrowerDashboardPage"), 900000);
+        const loanRequest = {
+          userId,
+          borrower,
+          lender,
+          amount: parseFloat(amount),
+          interestRate: parseFloat(interestRate),
+          repaymentDeadline,
+          loanId,
+        };
+
+        const response = await axios.post(
+          "http://localhost:3000/api/loans/createLoan",
+          loanRequest
+        );
+
+        setSuccess(response.data.message || "Loan request submitted successfully!");
+        setBorrower("");
+        setLender("");
+        setamount("");
+        setInterestRate("");
+        setrepaymentDeadline("");
+
+        setTimeout(() => navigate("/BorrowerDashboardPage"), 3000);
+      } catch (error) {
+        console.error("Error submitting loan request:", error);
+        setError("Failed to submit loan request. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     } catch (error) {
-      console.error("Error submitting loan request:", error);
-      setError("Failed to submit loan request. Please try again.");
-    } finally {
+      console.error("Error estimating gas or sending transaction:", error);
+      setError("Transaction failed. Please check gas settings and network status.");
       setLoading(false);
     }
   };
@@ -176,24 +209,62 @@ const BorrowerPage = () => {
       <form onSubmit={handleSubmit} style={styles.form}>
         {error && <div style={styles.errorMessage}>{error}</div>}
         {success && <div style={styles.successMessage}>{success}</div>}
-        {loading && <div style={styles.loadingMessage}>Submitting your loan request...</div>}
+        {loading && (
+          <div style={styles.loadingMessage}>Submitting your loan request...</div>
+        )}
 
-        <input type="text" placeholder="Your C-Chain Address" value={borrowerAddress} onChange={(e) => setBorrowerAddress(e.target.value)} required style={styles.input} />
-        <input type="text" placeholder="Lender's C-Chain address" value={lenderAddress} onChange={(e) => setLenderAddress(e.target.value)} required style={styles.input} />
-        <input type="number" placeholder="Loan Amount (tokens)" value={loanAmount} onChange={(e) => setLoanAmount(e.target.value)} required style={styles.input} />
-        <input type="number" placeholder="Interest Rate (%)" value={interestRate} onChange={(e) => setInterestRate(e.target.value)} required style={styles.input} />
-        <input type="text" placeholder="Repayment Terms (e.g., 12 months)" value={repaymentTerms} onChange={(e) => setRepaymentTerms(e.target.value)} required style={styles.input} />
+        <input
+          type="text"
+          placeholder="Your C-Chain Address"
+          value={borrower}
+          onChange={(e) => setBorrower(e.target.value)}
+          required
+          style={styles.input}
+        />
+        <input
+          type="text"
+          placeholder="Lender's C-Chain address"
+          value={lender}
+          onChange={(e) => setLender(e.target.value)}
+          required
+          style={styles.input}
+        />
+        <input
+          type="number"
+          placeholder="Loan Amount (tokens)"
+          value={amount}
+          onChange={(e) => setamount(e.target.value)}
+          required
+          style={styles.input}
+        />
+        <input
+          type="number"
+          placeholder="Interest Rate (%)"
+          value={interestRate}
+          onChange={(e) => setInterestRate(e.target.value)}
+          required
+          style={styles.input}
+        />
+        <input
+          type="number"
+          placeholder="Repayment Deadline (in months)"
+          value={repaymentDeadline}
+          onChange={(e) => setrepaymentDeadline(e.target.value)}
+          required
+          style={styles.input}
+        />
 
         <button type="submit" style={styles.button} disabled={loading}>
           {loading ? "Submitting..." : "Request Loan"}
         </button>
       </form>
-      <Link to="/BorrowerDashboardPage" style={styles.link}>Back to Dashboard</Link>
+      <Link to="/BorrowerDashboardPage" style={styles.link}>
+        Back to Dashboard
+      </Link>
     </div>
   );
 };
 
-// Styling (same as before)
 const styles = {
   container: {
     fontFamily: "Arial, sans-serif",

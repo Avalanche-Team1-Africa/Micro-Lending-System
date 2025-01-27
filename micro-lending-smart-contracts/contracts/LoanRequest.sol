@@ -42,6 +42,7 @@ contract LoanRequest {
 
     // Function to get the loan status
     function getLoanStatus(uint256 loanId) public view returns (string memory) {
+       require(loanId > 0 && loanId <= loanCount, "Loan does not exist"); 
         Loan memory loan = loans[loanId];
 
         if (loan.isRepaid) return "Repaid";

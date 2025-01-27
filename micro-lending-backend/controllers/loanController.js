@@ -1,15 +1,32 @@
 const { loanRequestContract, lenderFundingContract, loanRepaymentContract, penaltyRewardContract } = require('../services/blockchainService.js');
 const Loan = require('../models/Loan.js');
-const {ethers } = require("ethers");
+const { ethers } = require("ethers");
 const createLoan = async (req, res) => {
-    const { lenderAddress, borrowerAddress, amount, interestRate, repaymentDeadline } = req.body;
+    const { lender, borrower, amount, interestRate, repaymentDeadline } = req.body;
 
     try {
+
+        console.log("Amount before conversion:", amount);
+        console.log("Amount type:", typeof amount);
+    
+        // Ensure amount is a valid number before parsing
+        if (!amount || isNaN(amount)) {
+            throw new Error(`Invalid amount: ${amount}`);
+        }
+
+        const amountString = amount.toString();  
+        console.log("Amount after conversion:", amountString);
+
+        const loanAmountInWei = ethers.utils.parseEther(amountString);
+        console.log("Amount in Wei:", loanAmountInWei.toString());
+       
+        const repaymentDate = new Date();
+        repaymentDate.setMonth(repaymentDate.getMonth() + parseInt(repaymentDeadline));
         // Initiate the loan creation on the blockchain
         const tx = await loanRequestContract.createLoanRequest(
-            ethers.utils.parseEther(amount.toString()),
+            loanAmountInWei,
             interestRate,
-            repaymentDeadline
+            repaymentDeadline,
         );
         const txReceipt = await tx.wait();
         const loanId = txReceipt.events.find(e => e.event === "LoanCreated")?.args.loanId.toString();
@@ -21,9 +38,9 @@ const createLoan = async (req, res) => {
             loanId,
             amount,
             interestRate,
-            borrowerAddress,  // Should be mapped to the User _id in the future
-            lenderAddress,    // Should be mapped to the User _id in the future
-            repaymentDeadline,
+            borrower,  // Should be mapped to the User _id in the future
+            lender,    // Should be mapped to the User _id in the future
+            repaymentDeadline: repaymentDate,
             status: 'pending',  // Default status
             dateCreated: new Date()
         });
@@ -35,13 +52,13 @@ const createLoan = async (req, res) => {
         return res.status(500).json({ message: "Blockchain transaction failed", error: err.message });
     }
 };
-const fundLoan = async (req, res) => {
+const lendFunds = async (req, res) => {
     const { loanId } = req.params;
     const { amount } = req.body;
 
     try {
         // Fetch the loan from the database
-        const loan = await Loan.findOne({ loanId });
+        const loan = await Loan.findOne({ loanId: String(loanId) });
 
         if (!loan) {
             return res.status(404).json({ message: "Loan not found" });
@@ -68,9 +85,6 @@ const fundLoan = async (req, res) => {
     }
 };
 
-
-
-
 const repayLoan = async(req, res) => {
     const { loanId } = req.params;
     const { amount } = req.body;
@@ -91,7 +105,7 @@ const penalizeLoan = async(req, res) => {
     const { loanId } = req.params;
 
     try {
-        const tx = penaltyRewardContract.enforcePenalty(loanId);
+        const tx = await penaltyRewardContract.enforcePenalty(loanId);
         await tx.wait();
 
         return res.status(200).json({ message: "Penalty enforced successfully on blockchain" });
@@ -100,17 +114,14 @@ const penalizeLoan = async(req, res) => {
     }
 };
 
-const fetchLoansByUser = async (req, res) => {
-    const { userAddress } = req.params;  // Accept the user address as a route parameter
+const fetchLoansByBorrower = async (req, res) => {
+    const { walletAddress } = req.params;  // Accept the user address as a route parameter
 
     try {
         // Fetch loans where either lenderAddress or borrowerAddress matches the user's address
-        const loans = await Loan.find({
-            $or: [
-                { lenderAddress: userAddress },
-                { borrowerAddress: userAddress }
-            ]
-        });
+        const loans = await Loan.find({ 
+            borrower: walletAddress,
+            });
 
         if (loans.length === 0) {
             return res.status(404).json({ message: "No loans found for this user" });
@@ -123,11 +134,11 @@ const fetchLoansByUser = async (req, res) => {
 };
 
 const fetchLenderLoans = async (req, res) => {
-    const { lenderAddress } = req.params; // Assuming lender's address is passed as a parameter
+    const { lender } = req.params; // Assuming lender's address is passed as a parameter
   
     try {
       // Find all loans where the lender is involved (either as a lender or borrower)
-      const lenderLoans = await Loan.find({ lenderAddress }); // Or adjust query as needed (e.g., where borrower matches)
+      const lenderLoans = await Loan.find({ lender }); // Or adjust query as needed (e.g., where borrower matches)
   
       if (lenderLoans.length === 0) {
         return res.status(404).json({ message: "No loans found for this lender" });
@@ -141,7 +152,7 @@ const fetchLenderLoans = async (req, res) => {
   
 const fetchLoanRequests = async (req, res) => {
     try {
-      const lenderAddress = req.params.lenderAddress;
+      const lender = req.params.lender;
       const loanRequests = await Loan.find({ status: 'pending' });
   
       if (!loanRequests || loanRequests.length === 0) {
@@ -154,4 +165,4 @@ const fetchLoanRequests = async (req, res) => {
     }
   };
 
-module.exports = { createLoan, fundLoan, repayLoan, penalizeLoan, fetchLoansByUser, fetchLenderLoans, fetchLoanRequests};
+module.exports = { createLoan, lendFunds, repayLoan, penalizeLoan, fetchLoansByBorrower, fetchLenderLoans, fetchLoanRequests};

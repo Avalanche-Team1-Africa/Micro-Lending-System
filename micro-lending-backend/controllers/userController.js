@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET
 
 const signup = async (req, res) => {
     const { username, email, password, walletAddress, role } = req.body;
-     console.log({ username, email, password, walletAdrress, role})
+     console.log({ username, email, password, walletAddress, role})
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) {

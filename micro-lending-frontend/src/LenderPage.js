@@ -4,18 +4,18 @@ import { loanRequestContract, loanRepaymentContract } from "./config";
 import { ethers } from "ethers";
 
 const LenderPage = () => {
-  const [lenderAddress, setLenderAddress] = useState("");
-  const [borrowerAddress, setBorrowerAddress] = useState("");
-  const [amountLent, setAmountLent] = useState("");
+  const [lender, setLender] = useState("");
+  const [borrower, setBorrower] = useState("");
+  const [amount, setamount] = useState("");
   const [interestRate, setInterestRate] = useState("");
-  const [repaymentTerms, setRepaymentTerms] = useState("");
+  const [repaymentDeadline, setrepaymentDeadline] = useState("");
   const [loanId, setLoanId] = useState("");
   const [loanCreated, setLoanCreated] = useState(false);
 
   const handleCreateLoan = async (e) => {
     e.preventDefault();
 
-    if (!lenderAddress || !borrowerAddress || !amountLent || !interestRate || !repaymentTerms) {
+    if (!lender || !borrower || !amount || !interestRate || !repaymentDeadline) {
       alert("Please fill all fields.");
       return;
     }
@@ -33,9 +33,9 @@ const LenderPage = () => {
 
       // Send transaction to blockchain
       const tx = await contract.createLoanRequest(
-        ethers.utils.parseEther(amountLent.toString()), // Convert to Wei
+        ethers.utils.parseEther(amount.toString()), // Convert to Wei
         interestRate,
-        repaymentTerms
+        repaymentDeadline
       );
 
       await tx.wait();
@@ -71,8 +71,8 @@ const LenderPage = () => {
 
       const contract = new ethers.Contract(loanRepaymentContract.address, loanRepaymentContract.abi, signer);
 
-      const tx = await contract.fundLoan(loanId, {
-        value: ethers.utils.parseEther(amountLent.toString()), // Send amount as value
+      const tx = await contract.lenderFunds(loanId, {
+        value: ethers.utils.parseEther(amount.toString()), // Send amount as value
       });
 
       await tx.wait();
@@ -87,11 +87,11 @@ const LenderPage = () => {
     <div style={{ fontFamily: "Arial, sans-serif", backgroundColor: "#f0f8ff", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "30px" }}>
       <h2>{loanCreated ? "Fund Loan" : "Provide Loan Offer"}</h2>
       <form onSubmit={loanCreated ? handleFundLoan : handleCreateLoan} style={{ backgroundColor: "white", padding: "30px", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)", width: "400px", textAlign: "center" }}>
-        <input type="text" placeholder="Your C-Chain Address" value={lenderAddress} onChange={(e) => setLenderAddress(e.target.value)} required style={{ width: "90%", padding: "10px", margin: "10px 0", border: "1px solid #ccc", borderRadius: "5px", fontSize: "16px" }} />
-        <input type="text" placeholder="Borrower's C-Chain Address" value={borrowerAddress} onChange={(e) => setBorrowerAddress(e.target.value)} required style={{ width: "90%", padding: "10px", margin: "10px 0", border: "1px solid #ccc", borderRadius: "5px", fontSize: "16px" }} />
-        <input type="number" placeholder="Loan Amount (in tokens)" value={amountLent} onChange={(e) => setAmountLent(e.target.value)} required style={{ width: "90%", padding: "10px", margin: "10px 0", border: "1px solid #ccc", borderRadius: "5px", fontSize: "16px" }} />
+        <input type="text" placeholder="Your C-Chain Address" value={lender} onChange={(e) => setLender(e.target.value)} required style={{ width: "90%", padding: "10px", margin: "10px 0", border: "1px solid #ccc", borderRadius: "5px", fontSize: "16px" }} />
+        <input type="text" placeholder="Borrower's C-Chain Address" value={borrower} onChange={(e) => setBorrower(e.target.value)} required style={{ width: "90%", padding: "10px", margin: "10px 0", border: "1px solid #ccc", borderRadius: "5px", fontSize: "16px" }} />
+        <input type="number" placeholder="Loan Amount (in tokens)" value={amount} onChange={(e) => setamount(e.target.value)} required style={{ width: "90%", padding: "10px", margin: "10px 0", border: "1px solid #ccc", borderRadius: "5px", fontSize: "16px" }} />
         <input type="number" placeholder="Interest Rate (%)" value={interestRate} onChange={(e) => setInterestRate(e.target.value)} required style={{ width: "90%", padding: "10px", margin: "10px 0", border: "1px solid #ccc", borderRadius: "5px", fontSize: "16px" }} />
-        <input type="text" placeholder="Repayment Terms (e.g., 12 months)" value={repaymentTerms} onChange={(e) => setRepaymentTerms(e.target.value)} required style={{ width: "90%", padding: "10px", margin: "10px 0", border: "1px solid #ccc", borderRadius: "5px", fontSize: "16px" }} />
+        <input type="text" placeholder="Repayment Terms (e.g., 12 months)" value={repaymentDeadline} onChange={(e) => setrepaymentDeadline(e.target.value)} required style={{ width: "90%", padding: "10px", margin: "10px 0", border: "1px solid #ccc", borderRadius: "5px", fontSize: "16px" }} />
 
         {!loanCreated && <button type="submit" style={{ width: "95%", padding: "15px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "5px", fontWeight: "bold", cursor: "pointer", marginTop: "15px" }}>Create Loan</button>}
         {loanCreated && (
