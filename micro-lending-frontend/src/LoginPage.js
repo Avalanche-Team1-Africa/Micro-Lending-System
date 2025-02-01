@@ -25,10 +25,16 @@ const LoginPage = () => {
     
       }  );
 
-      const { token } = response.data;
+      const { token, user } = response.data;
+
+      if (!token || !user?._id) {
+        setError("Invalid response from server");
+        return;
+      }
 
       // Store token in local storage
       localStorage.setItem('token', token);
+      localStorage.setItem("userId", user._id); // Store user ID after successful login
 
       // Decode the token to get the user role
       const decoded = jwtDecode(token);

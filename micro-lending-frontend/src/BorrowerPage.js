@@ -5,7 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import { ethers } from "ethers";
 import { loanRequestContract } from "./config";
 
-// ENS resolver function (you can move this to a separate utils file if preferred)
+
 async function resolveENS(nameOrAddress, provider) {
   const network = await provider.getNetwork();
 

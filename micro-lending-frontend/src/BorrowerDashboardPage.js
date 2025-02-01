@@ -7,48 +7,54 @@ const BorrowerDashboardPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const walletAddress = localStorage.getItem("walletAddress"); // Assuming the user's ID is available in localStorage
+  const userId = localStorage.getItem("userId"); 
 
   useEffect(() => {
-    const fetchLoansByBorrower = async () => {
-      if (!walletAddress) {
-        setError("");
+    console.log("User ID from localStorage:", userId);
+      if (!userId) {
+        setError("User ID not found.");
         setIsLoading(false);
         return;
       }
-      
-      try {
-        const response = await axios.get(`/api/borrower/fetchLoansByBorrower/${walletAddress}`);
-        setLoans(response.data);
-      } catch (error) {
-        console.error("Error fetching loans:", error);
-        setError("An error occurred while fetching your loans.");
-      } finally {
-        setIsLoading(false);
-      }
+      const fetchLoanRequests = async () => {
+        try {
+            console.log(`Fetching loan requests for user: ${userId}`); 
+            const borrower = "0x20301285102F899Ec34B48B8e5F55eE4785382B8";
+            const response = await axios.get(`http://localhost:3000/api/loans/fetchLoanRequests/${borrower}`);
+            
+            console.log("Response from backend:", response.data); 
+            
+            setLoans(response.data);
+        } catch (error) {
+            console.error("Error fetching loans:", error);
+            setError("Failed to fetch loans.");
+        } finally {
+            setIsLoading(false);
+        }
     };
-
-    fetchLoansByBorrower();
-  }, [walletAddress]);
+    fetchLoanRequests();
+  }, [userId]);
 
   return (
     <div style={styles.container}>
       <h2 style={styles.header}>My Dashboard</h2>
-
+      
       {/* Display error if any */}
       {error && <p style={styles.errorMessage}>{error}</p>}
 
       <section style={styles.section}>
-        <h3 style={styles.loanHeader}>My Loans</h3>
+        <h3 style={styles.loanHeader}>My Dashboard</h3>
+        <h4 style={{ ...styles.loanText, textAlign: 'center' }}>role: borrower </h4>
+
         {isLoading ? (
           <p style={styles.loadingMessage}>Loading your loans...</p>
         ) : loans.length > 0 ? (
           <ul style={styles.loanList}>
             {loans.map((loan) => (
-              <li key={loan._id} style={styles.loanId}>
+              <li key={loan._id} style={styles.loanItem}>
                 <p style={styles.loanText}><strong>Lender Address:</strong> {loan.lender}</p>
                 <p style={styles.loanText}><strong>Loan Amount:</strong> {loan.amount} </p>
-                <p style={styles.loanText}><strong>Lender Address:</strong> {loan.lender}</p>
+                <p style={styles.loanText}><strong>My Address:</strong> {loan.borrower}</p>
                 <p style={styles.loanText}><strong>Interest Rate:</strong> {loan.interestRate}</p>
                 <p style={styles.loanText}><strong>Repayment Deadline:</strong> {new Date(loan.repaymentDeadline).toLocaleString()}</p> 
                 <p style={styles.loanText}><strong>Status:</strong> {loan.status}</p>
@@ -59,10 +65,17 @@ const BorrowerDashboardPage = () => {
           <p style={styles.noLoansMessage}>No loans found.</p>
         )}
       </section>
-
-      <Link to="/BorrowerPage" style={styles.newLoanLink}>
-        Submit a New Loan Request
-      </Link>
+      <div style={styles.linkContainer}>
+  <Link to="/BorrowerPage" style={styles.link}>
+    Submit a New Loan Request
+  </Link>
+  <Link to="/LoanRepaymentPage" style={styles.link}>
+    Repay Loan
+  </Link>
+  <Link to="/" style={styles.link}>
+    Logout
+  </Link>
+</div>  
     </div>
   );
 };
@@ -109,15 +122,17 @@ const styles = {
   },
   loanItem: {
     padding: "15px",
-    borderBottom: "1px solid #ddd",
-    marginBottom: "10px",
-    backgroundColor: "#f9f9f9",
+    marginBottom: "15px",
+    backgroundColor: "#ffffff",
     borderRadius: "8px",
-  },
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", 
+    borderLeft: "5px solid #007bff", 
+},
+
   loanText: {
     fontSize: "16px",
     color: "#333",
-    marginBottom: "8px",
+    margin: "5px 0",
   },
   loadingMessage: {
     color: "#007bff",
@@ -135,7 +150,23 @@ const styles = {
     fontSize: "18px",
     color: "#007bff",
     marginTop: "30px",
+    textDecoration: "none",  
+  },
+  linkContainer: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "20px", // Adds spacing between links
+    marginTop: "20px",
+  },
+  link: {
     textDecoration: "none",
+    color: "#007bff",
+    fontSize: "16px",
+    fontWeight: "bold",
+    padding: "10px 15px",
+    border: "2px solid #007bff",
+    borderRadius: "5px",
+    transition: "0.3s",
   },
 };
 

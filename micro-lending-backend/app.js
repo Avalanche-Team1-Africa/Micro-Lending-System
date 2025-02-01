@@ -33,7 +33,6 @@ app.use('/api/auth/', userRoutes);
 app.use('/api/loans/', loanRoutes);
 
 
-
 // Define a basic route for health check
 app.get('/', (req, res) => {
     res.send('Micro-Lending System Backend is running!');

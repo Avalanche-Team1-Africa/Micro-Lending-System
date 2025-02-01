@@ -58,7 +58,7 @@ const SignupPage = () => {
       backgroundColor: '#f0f8ff',
       color: '#333',
       padding: '40px',
-      minHeight: '100vh',
+      minHeight: '90vh',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -73,7 +73,7 @@ const SignupPage = () => {
       textAlign: 'center',
     },
     input: {
-      width: '100%',
+      width: '90%',
       padding: '15px',
       margin: '10px 0',
       border: '1px solid #ccc',

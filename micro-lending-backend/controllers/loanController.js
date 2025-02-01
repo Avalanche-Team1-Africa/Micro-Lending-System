@@ -85,21 +85,32 @@ const lendFunds = async (req, res) => {
     }
 };
 
-const repayLoan = async(req, res) => {
+const repayLoan = async (req, res) => {
     const { loanId } = req.params;
     const { amount } = req.body;
 
+    // Validate input types
+    if (!loanId || isNaN(loanId) || !amount || isNaN(amount)) {
+        return res.status(400).json({ message: "Invalid loanId or amount" });
+    }
+
     try {
+        // Repay the loan on the blockchain
         const tx = await loanRepaymentContract.repayLoan(loanId, {
-            value: ethers.utils.parseEther(amount.toString())
+            value: ethers.utils.parseEther(amount.toString()), // Convert to Wei
         });
+
+        // Wait for the transaction to be mined
         await tx.wait();
 
-        return res.status(200).json({ message: "Loan repaid successfully on blockchain" });
-    } catch(err) {
-        return res.status(500).json({ message: "Repayment trasnaction failed", error: err.message });
+        // Update DB to mark the loan as repaid
+        await Loan.findByIdAndUpdate(loanId, { status: "Repaid" });
+
+        return res.status(200).json({ message: "Loan repaid successfully on blockchain and updated in DB" });
+    } catch (err) {
+        return res.status(500).json({ message: "Repayment transaction failed", error: err.message });
     }
-}
+};
 
 const penalizeLoan = async(req, res) => {
     const { loanId } = req.params;
@@ -115,12 +126,12 @@ const penalizeLoan = async(req, res) => {
 };
 
 const fetchLoansByBorrower = async (req, res) => {
-    const { walletAddress } = req.params;  // Accept the user address as a route parameter
+    const { userId } = req.params;  // Accept the user address as a route parameter
 
     try {
         // Fetch loans where either lenderAddress or borrowerAddress matches the user's address
         const loans = await Loan.find({ 
-            borrower: walletAddress,
+            userId,
             });
 
         if (loans.length === 0) {
@@ -134,35 +145,46 @@ const fetchLoansByBorrower = async (req, res) => {
 };
 
 const fetchLenderLoans = async (req, res) => {
-    const { lender } = req.params; // Assuming lender's address is passed as a parameter
-  
+    const { userId } = req.params;
+    console.log("Received userId:", userId); // Debugging log
+
     try {
-      // Find all loans where the lender is involved (either as a lender or borrower)
-      const lenderLoans = await Loan.find({ lender }); // Or adjust query as needed (e.g., where borrower matches)
-  
-      if (lenderLoans.length === 0) {
-        return res.status(404).json({ message: "No loans found for this lender" });
-      }
-  
-      return res.status(200).json(lenderLoans);
+        const lenderLoans = await Loan.find({ lender: userId });
+        
+        if (lenderLoans.length === 0) {
+            console.log("No loans found for this lender.");
+            return res.status(404).json({ message: "No loans found for this lender" });
+        }
+
+        console.log("Loans found:", lenderLoans); // Debugging log
+        return res.status(200).json(lenderLoans);
     } catch (err) {
-      return res.status(500).json({ message: "Error fetching lender loans", error: err.message });
+        console.error("Error fetching lender loans:", err.message);
+        return res.status(500).json({ message: "Error fetching lender loans", error: err.message });
     }
-  };
+};
   
 const fetchLoanRequests = async (req, res) => {
     try {
-      const lender = req.params.lender;
-      const loanRequests = await Loan.find({ status: 'pending' });
-  
-      if (!loanRequests || loanRequests.length === 0) {
-        return res.status(404).json({ message: 'No loan requests found' });
-      }
-  
-      res.status(200).json(loanRequests);
+        const userId = req.params.userId;
+        console.log("Received request to fetch loan requests for:", userId); 
+
+        const loanRequests = await Loan.find({
+            $or: [{ borrower: userId }, { lender: userId }]  
+        });
+
+        if (!loanRequests || loanRequests.length === 0) {
+            console.log(" No loan requests found for user:", userId);
+            return res.status(404).json({ message: "No loan requests found" });
+        }
+
+        console.log(" Loan requests found:", loanRequests);
+        res.status(200).json(loanRequests);
     } catch (err) {
-      res.status(500).json({ message: 'Error fetching loan requests', error: err.message });
+        console.error(" Error fetching loan requests:", err.message);
+        res.status(500).json({ message: "Error fetching loan requests", error: err.message });
     }
-  };
+};
+
 
 module.exports = { createLoan, lendFunds, repayLoan, penalizeLoan, fetchLoansByBorrower, fetchLenderLoans, fetchLoanRequests};
