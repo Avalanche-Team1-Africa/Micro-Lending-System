@@ -10,7 +10,8 @@ The system automates penalties for late payments and rewards for timely repaymen
 * Loan Requests: Borrowers can submit loan requests with specified repayment terms, interest rates, and loan amounts.
 * Smart Contract Enforcement: Loan agreements are governed by smart contracts, ensuring compliance with repayment deadlines.
 * Automated Penalties & Rewards: The system applies penalties for late payments and rewards users for responsible financial behavior.
-* User reviews, from the borrowerd being rated and the lenders being rated and recommendations.
+* User reviews,from the borrowerd being rated and the lenders being rated and recommendations.
+* Lender can fund a loan request and a Borrower is able to pay the loan they have been funded with terms agreed between them and the lender.
 
 # Tech Stack Used
 
