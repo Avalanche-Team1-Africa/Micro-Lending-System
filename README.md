@@ -1,8 +1,5 @@
 # Micro-Lending-System
 
-
-# Description
-
 The Micro-Lending System is a decentralized peer-to-peer lending platform built on the Avalanche C-Chain. 
 It enables borrowers to request loans and lenders to fund them, with smart contracts enforcing the agreed repayment terms. 
 The system automates penalties for late payments and rewards for timely repayments, ensuring trust and security without intermediaries.
