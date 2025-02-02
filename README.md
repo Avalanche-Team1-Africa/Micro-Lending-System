@@ -23,28 +23,20 @@ The system automates penalties for late payments and rewards timely repayments, 
 ## 🛠 Tech Stack
 
 **Languages:**  
-![Solidity](https://img.shields.io/badge/Solidity-363636?style=flat&logo=solidity&logoColor=white)  
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black)  
+# ![Solidity](https://img.shields.io/badge/Solidity-363636?style=flat&logo=solidity&logoColor=white)  ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black) #
 
 **Frameworks:**  
-![Avalanche](https://img.shields.io/badge/Avalanche-E84142?style=flat&logo=avalanche&logoColor=white)  
-![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)  
-![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat&logo=node.js&logoColor=white)  
-![Express](https://img.shields.io/badge/Express.js-404D59?style=flat&logo=express&logoColor=white)  
+# ![Avalanche](https://img.shields.io/badge/Avalanche-E84142?style=flat&logo=avalanche&logoColor=white)  ![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)  ![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat&logo=node.js&logoColor=white)  ![Express](https://img.shields.io/badge/Express.js-404D59?style=flat&logo=express&logoColor=white) #  
 
 **Tools:**  
-![Hardhat](https://img.shields.io/badge/Hardhat-FFA500?style=flat&logo=hardhat&logoColor=black)  
-![Web3.js](https://img.shields.io/badge/Web3.js-F16822?style=flat&logo=ethereum&logoColor=white)  
-![Metamask](https://img.shields.io/badge/Metamask-F6851B?style=flat&logo=metamask&logoColor=white)  
-![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat&logo=axios&logoColor=white)  
-![React Router](https://img.shields.io/badge/React_Router-CA4245?style=flat&logo=react-router&logoColor=white)  
+# ![Hardhat](https://img.shields.io/badge/Hardhat-FFA500?style=flat&logo=hardhat&logoColor=black)  ![Web3.js](https://img.shields.io/badge/Web3.js-F16822?style=flat&logo=ethereum&logoColor=white)   ![Metamask](https://img.shields.io/badge/Metamask-F6851B?style=flat&logo=metamask&logoColor=white) ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat&logo=axios&logoColor=white) ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=flat&logo=react-router&logoColor=white) #
 
 ---
 
 
 ## 📌 Setup Instructions
 
-### 💠 Clone the Repository
+#### ⯍ Clone the Repository
 ```sh
 $ git clone https://github.com/Avalanche-Team1-DAO-Kenya/Micro-Lending-System
 ```
@@ -52,22 +44,22 @@ $ git clone https://github.com/Avalanche-Team1-DAO-Kenya/Micro-Lending-System
 $ cd micro-lending-system
 ```
 
-### 💠 Install Dependencies
+#### ⯍ Install Dependencies
 ```sh
 $ npm install
 ```
 
-### 💠 Compile Smart Contracts
+#### ⯍ Compile Smart Contracts
 ```sh
 $ cd smart-contracts
 $ npx hardhat compile
 ```
 
-### 💠 Configure Avalanche Network
+#### ⯍ Configure Avalanche Network
 - Edit the `.env` file in both the **backend** and **smart contracts** folders.
 - Add your **Avalanche network details** and **private key** (from your Metamask connected to Core Wallet).
 
-### 💠 Deploy Smart Contracts to Fuji Testnet
+#### ⯍ Deploy Smart Contracts to Fuji Testnet
 ```sh
 $ npx hardhat run scripts/deploy.js --network fuji
 ```
@@ -75,7 +67,7 @@ $ npx hardhat run scripts/deploy.js --network fuji
 - Update the **blockchainService.js** file in the **backend** folder.
 - Update the **config.js** file in the **frontend** folder.
 
-### 💠 Run the Application
+#### ⯍ Run the Application
 - Open two terminal windows.
                                                                            
                                                                            
@@ -94,7 +86,7 @@ $ cd micro-lending-backend
 $ node app.js
 ```
 
-### 💠 Ensure Sufficient AVAX Balance
+### ⯍ Ensure Sufficient AVAX Balance
 - Make sure your **Core Wallet** has enough AVAX to cover transactions.
 
 ---
@@ -117,15 +109,13 @@ $ node app.js
 
 ## 🧨Milestones
 
-**Waitlist Landing Page Integration**
-**Smart Contract Integration with Frontend & Backend**
+Waitlist Landing Page Integration
+Smart Contract Integration with Frontend & Backend
 
 
 
-### 🧩 Objective
+### 🎖 Objective
 **Add a waitlist landing page** to gather potential user interest, build anticipation, and collect early feedback.
-
-
 
 #### Tasks:
 - **Design Landing Page:** Create a form with fields for name, email, and interest level.
