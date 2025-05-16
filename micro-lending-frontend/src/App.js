@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import LoginPage from './LoginPage';
 import SignupPage from './SignupPage';
+import './index.css'; // Import your CSS file here
+import './App.css'; // Import your CSS file here
+
 
 import BorrowerNotificationPage from './BorrowerNotificationPage';
 import LenderNotificationPage from './LenderNotificationPage';
