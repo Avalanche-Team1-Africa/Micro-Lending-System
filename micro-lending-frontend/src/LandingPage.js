@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { ConnectButton } from "@rainbow-me/rainbowkit"
+// import { ConnectButton } from "@rainbow-me/rainbowkit"
 
 const FloatingShapes = () => {
   const shapes = ['🔵', '🟢', '🔶', '🟣', '⭐'];
@@ -377,7 +377,7 @@ const LandingPage = () => {
     as="a"
   >
     {/* RainbowKit ConnectButton with fallback */}
-    <ConnectButton />
+    {/* <ConnectButton /> */}
   </motion.div>
 </ParticleButton>
 
