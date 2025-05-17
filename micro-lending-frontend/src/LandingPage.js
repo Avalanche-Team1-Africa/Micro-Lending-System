@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { ConnectButton } from "@rainbow-me/rainbowkit"
 
 const FloatingShapes = () => {
   const shapes = ['🔵', '🟢', '🔶', '🟣', '⭐'];
@@ -368,17 +369,18 @@ const LandingPage = () => {
           <p style={{ fontSize: '1.5rem', maxWidth: '800px', margin: '0 auto 40px', lineHeight: '1.6' }}>
             Experience the future of peer-to-peer lending with blockchain-powered smart contracts that ensure transparency and security.
           </p>
-          
-         <ParticleButton
-  style={styles.button}
-  whileHover={{
-    boxShadow: '0 15px 30px rgba(99, 102, 241, 0.4)'
-  }}
-  as="a"
-  href="/SignupPage"
->
-  Get Started
+          <ParticleButton>
+  <motion.div
+    whileHover={{
+      boxShadow: '0 15px 30px rgba(99, 102, 241, 0.4)',
+    }}
+    as="a"
+  >
+    {/* RainbowKit ConnectButton with fallback */}
+    <ConnectButton />
+  </motion.div>
 </ParticleButton>
+
         </motion.div>
       </section>
 
